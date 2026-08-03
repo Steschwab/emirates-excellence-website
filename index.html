@@ -779,18 +779,31 @@
   leadModal.addEventListener('click', e => { if(e.target === leadModal) closeLeadModal(); });
   document.addEventListener('keydown', e => { if(e.key === 'Escape') closeLeadModal(); });
 
-  document.getElementById('leadForm').addEventListener('submit', function(e){
+  document.getElementById('leadForm').addEventListener('submit', async function(e){
     e.preventDefault();
     const nome = document.getElementById('leadNome').value;
     const email = document.getElementById('leadEmail').value;
     const telefono = document.getElementById('leadTelefono').value;
-    const subject = 'Nuovo lead dal sito: ' + nome;
-    const body = 'Nome: ' + nome + '\nEmail: ' + email + '\nTelefono: ' + telefono;
-    const recipients = 'info@emiratesexcellence.com,stefanoschwab+eqhbwwvojlcq6msi7hvv@boards.trello.com';
-    window.location.href = 'mailto:' + recipients + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
-    leadFormView.style.display = 'none';
-    leadSuccessView.classList.add('active');
-    this.reset();
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalLabel = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Invio in corso…';
+    try {
+      const resp = await fetch('/api/lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome, email, telefono })
+      });
+      if (!resp.ok) throw new Error('request failed');
+      leadFormView.style.display = 'none';
+      leadSuccessView.classList.add('active');
+      this.reset();
+    } catch (err) {
+      alert('Si è verificato un errore nell\'invio. Riprova tra poco, oppure scrivici direttamente a info@emiratesexcellence.com.');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalLabel;
+    }
   });
 </script>
 
